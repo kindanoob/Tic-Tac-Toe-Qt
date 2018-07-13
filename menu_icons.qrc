@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/images/menu_icons">
+        <file>images/menu_icons/about.jpg</file>
+        <file>images/menu_icons/fullscreen.jpg</file>
+        <file>images/menu_icons/help.jpg</file>
+        <file>images/menu_icons/play.jpg</file>
+        <file>images/menu_icons/settings.jpg</file>
+        <file>images/menu_icons/exit.jpg</file>
+    </qresource>
+    <qresource prefix="/"/>
+</RCC>
