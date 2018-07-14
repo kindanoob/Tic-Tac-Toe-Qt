@@ -6,19 +6,22 @@
 #include <QPen>
 #include <QMessageBox>
 #include <QApplication>
-//#include <QtGlobal>
 
-constexpr int kSquareSizeInPx = kWindowWidthInPx / 10;
+constexpr int kSquareSizeScaleFactor = 6;
+constexpr int kSquareSizeInPx = kWindowWidthInPx / kSquareSizeScaleFactor;
 constexpr int kPenWidthInPx = 8;
+constexpr int kPenScaleFactor = 10;
 constexpr int kNumRows = 3;
 constexpr int kNumCols = 3;
 constexpr int kNumSquares = kNumRows * kNumCols;
 constexpr int kBoardWidthInPx = kSquareSizeInPx * kNumCols;
 constexpr int kBoardHeightInPx = kSquareSizeInPx * kNumRows;
 constexpr int kXOffsetInPx = (kWindowWidthInPx - kBoardWidthInPx) / 2;
-constexpr int kWindowVerticalOffsetInPx = 50;//How to change it?
+constexpr int kWindowVerticalOffsetInPx = 50;//TODO: How to change it?
 constexpr int kYOffsetInPx = (kWindowHeightInPx - kBoardHeightInPx) / 2 + kWindowVerticalOffsetInPx;
 constexpr int kCircleRadius = kSquareSizeInPx / 2 - 3 * kPenWidthInPx / 4;
+// kCircleCoeff is used to adjust the circle radius depending on the square size and pen's width
+constexpr double kCircleCoeff = 5.0 / 5;
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -96,13 +99,13 @@ void MainWindow::UpdateBoardRectParameters() {
 void MainWindow::UpdateWindowParameters() {
     window_width = centralWidget()->geometry().width();
     window_height = centralWidget()->geometry().height();
-    square_size_in_px = qMin(window_width, window_height) / 10;
+    square_size_in_px = qMin(window_width, window_height) / kSquareSizeScaleFactor;
     board_width = square_size_in_px * kNumCols;
     board_height = square_size_in_px * kNumRows;
-    circle_radius = square_size_in_px / 2 - 3 * kPenWidthInPx / 4;
+    circle_radius = square_size_in_px / 2 - kCircleCoeff * kPenWidthInPx;
     offset_x = (window_width - board_width) / 2;
     offset_y = (window_height - board_height) / 2 + kWindowVerticalOffsetInPx;
-    pen_width = square_size_in_px / 10;
+    pen_width = square_size_in_px / kPenScaleFactor;
     UpdateBoardRectParameters();
 }
 
@@ -112,7 +115,6 @@ int MainWindow::GetSquareSizeInPx() {
 
 void MainWindow::paintEvent(QPaintEvent *event) {
     UpdateWindowParameters();
-    PrintBoardToConsole();
     QPainter painter(this);
     for (const auto& rect : rects) {
         painter.drawPolygon(rect);
@@ -151,16 +153,11 @@ void MainWindow::paintEvent(QPaintEvent *event) {
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event) {
-    //qDebug() << "YOYOYO";
-    //qDebug() << "POSPOS" << event->pos();
     update();
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
-    qDebug() << "In mousePressEvent";
-    qDebug() << "mouse pos: " << event->pos();
     if (event->button() == Qt::LeftButton) {
-        qDebug() << "Left mouse button pressed";
         int x = event->pos().x();
         int y = event->pos().y();
         for (int i = 0; i < rects.size(); ++i) {
@@ -173,7 +170,6 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
                     QMessageBox msgBox;
                     msgBox.setText(GetGameOutcomeText());
                     msgBox.exec();
-                    //QApplication::exit();
                     Reset();
                     return;
                 }
@@ -181,10 +177,6 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
                 break;
             }
         }
-    } else if (event->button() == Qt::RightButton) {
-        qDebug() << "Right mouse button pressed";
-    } else if (event->button() == Qt::MidButton) {
-        qDebug() << "Middle mouse button pressed";
     }
     update();
 }
@@ -206,10 +198,6 @@ void MainWindow::CreateRects() {
             rects.append(rect);
         }
     }
-}
-
-void MainWindow::FillSquare(int ind, SideToMove side, QPainter& painter) {
-    //
 }
 
 void MainWindow::SetSideToMove(const SideToMove& side) {

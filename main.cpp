@@ -4,7 +4,6 @@
 
 int main(int argc, char *argv[])
 {
-    qDebug() << "In main";
     QApplication a(argc, argv);
     MainWindow w;
     w.resize(kWindowWidthInPx, kWindowHeightInPx);
