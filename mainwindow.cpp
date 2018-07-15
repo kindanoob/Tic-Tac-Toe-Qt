@@ -11,9 +11,7 @@ constexpr int kSquareSizeScaleFactor = 6;
 constexpr int kSquareSizeInPx = kWindowWidthInPx / kSquareSizeScaleFactor;
 constexpr int kPenWidthInPx = 8;
 constexpr int kPenScaleFactor = 10;
-constexpr int kNumRows = 3;
-constexpr int kNumCols = 3;
-constexpr int kNumSquares = kNumRows * kNumCols;
+
 constexpr int kBoardWidthInPx = kSquareSizeInPx * kNumCols;
 constexpr int kBoardHeightInPx = kSquareSizeInPx * kNumRows;
 constexpr int kXOffsetInPx = (kWindowWidthInPx - kBoardWidthInPx) / 2;
@@ -43,46 +41,12 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     setMouseTracking(true);
-    CreateBoard();
     CreateRects();
     ui->mainToolBar->setIconSize(QSize(20, 20));
 }
 
 MainWindow::~MainWindow() {
     delete ui;
-}
-
-void MainWindow::CreateBoard() {
-    for (int row = 0; row < kNumRows; ++row) {
-        board.append(QVector<Piece>());
-        for (int col = 0; col < kNumCols; ++col) {
-            board[row].append(Piece::NoPiece);
-        }
-    }
-}
-
-void MainWindow::ResetBoard() {
-    for (auto& row : board) {
-        for (auto& square : row) {
-            square = Piece::NoPiece;
-        }
-    }
-}
-
-void MainWindow::PrintBoardToConsole() {
-    for (int row = 0; row < kNumRows; ++row) {
-        QString curr_row;
-        for (int col = 0; col < kNumCols; ++col) {
-            QString curr("_");
-            if (board[row][col] == Piece::X) {
-                curr = "X";
-            } else if (board[row][col] == Piece::O) {
-                curr = "O";
-            }
-            curr_row += curr;
-        }
-        qDebug() << curr_row;
-    }
 }
 
 void MainWindow::UpdateBoardRectParameters() {
@@ -129,9 +93,9 @@ void MainWindow::paintEvent(QPaintEvent *event) {
         int oy = offset_y;
         int sqsz = square_size_in_px;
         int r = circle_radius;
-        if (board[row][col] == Piece::NoPiece) {
+        if (board.At(row, col) == Piece::NoPiece) {
             continue;
-        } else if (board[row][col] == Piece::X) {
+        } else if (board.At(row, col) == Piece::X) {
             pen.setColor(Qt::red);
             pen.setCapStyle(Qt::RoundCap);
             painter.setPen(pen);
@@ -143,7 +107,7 @@ void MainWindow::paintEvent(QPaintEvent *event) {
                              oy + row * sqsz + pen_width,
                              ox + col * sqsz + pen_width,
                              oy + row * sqsz + sqsz - pen_width);
-        } else if (board[row][col] == Piece::O) {
+        } else if (board.At(row, col) == Piece::O) {
             pen.setColor(Qt::green);
             painter.setPen(pen);
             painter.drawEllipse(QPoint(ox + col * sqsz + sqsz / 2, oy + row * sqsz + sqsz / 2),
@@ -163,8 +127,8 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         for (int i = 0; i < rects.size(); ++i) {
             int row = i / kNumRows;
             int col = i % kNumCols;
-            if (rects[i].contains(QPoint(x, y)) && board[row][col] == Piece::NoPiece) {
-                board[row][col] = (side_to_move == SideToMove::X) ? Piece::X : Piece::O;
+            if (rects[i].contains(QPoint(x, y)) && board.At(row, col) == Piece::NoPiece) {
+                board.At(row, col) = (side_to_move == SideToMove::X) ? Piece::X : Piece::O;
                 UpdateGameStatus();
                 if (IsGameFinished()) {
                     QMessageBox msgBox;
@@ -234,70 +198,17 @@ void MainWindow::UpdateGameStatus() {
 }
 
 bool MainWindow::CheckWin(const SideToMove& side) {
+    Piece piece = side == SideToMove::X ? Piece::X : Piece::O;
     for (int i = 0; i < kNumRows; ++i) {
-        if (CheckRowWin(i, side) || CheckColWin(i, side)) {
+        if (board.CheckRowWin(i, piece) || board.CheckColWin(i, piece)) {
             return true;
         }
     }
-    return CheckMainDiagWin(side) || CheckAntiDiagWin(side);
-}
-
-bool MainWindow::CheckRowWin(int row, const SideToMove& side) {
-    Piece piece = side == SideToMove::X ? Piece::X : Piece::O;
-    if (board[row][0] != piece) {
-        return false;
-    }
-    for (int col = 0; col < kNumCols - 1; ++col) {
-        if (board[row][col] != board[row][col + 1]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool MainWindow::CheckColWin(int col, const SideToMove& side) {
-    Piece piece = side == SideToMove::X ? Piece::X : Piece::O;
-    if (board[0][col] != piece) {
-        return false;
-    }
-    for (int row = 0; row < kNumRows - 1; ++row) {
-        if (board[row][col] != board[row + 1][col]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool MainWindow::CheckMainDiagWin(const SideToMove& side) {
-    Piece piece = side == SideToMove::X ? Piece::X : Piece::O;
-    for (int row = 0; row < kNumRows; ++row) {
-        if (board[row][row] != piece) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool MainWindow::CheckAntiDiagWin(const SideToMove& side) {
-    Piece piece = side == SideToMove::X ? Piece::X : Piece::O;
-    for (int row = 0; row < kNumRows; ++row) {
-        if (board[row][kNumRows - row - 1] != piece) {
-            return false;
-        }
-    }
-    return true;
+    return board.CheckMainDiagWin(piece) || board.CheckAntiDiagWin(piece);
 }
 
 bool MainWindow::CheckDraw() {
-    int piece_cnt = 0;
-    for (int row = 0; row < kNumRows; ++row) {
-        for (int col = 0; col < kNumCols; ++col) {
-            if (board[row][col] != Piece::NoPiece) {
-                ++piece_cnt;
-            }
-        }
-    }
-    return piece_cnt == kNumSquares;
+    return board.CheckDraw();
 }
 
 QString MainWindow::GetGameOutcomeText() {
@@ -313,18 +224,8 @@ QString MainWindow::GetGameOutcomeText() {
     return outcome;
 }
 
-void MainWindow::on_actionExit_triggered()
-{
-    QApplication::exit();
-}
-
-void MainWindow::on_actionNew_triggered()
-{
-    Reset();
-}
-
 void MainWindow::Reset() {
-    ResetBoard();
+    board.Reset();
     ResetSideToMove();
     ResetGameStatus();
     ResetIsFinished();
@@ -357,6 +258,16 @@ void MainWindow::SetGameStatus(const GameStatus &status) {
 
 GameStatus MainWindow::GetGameStatus() {
     return game_status;
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+    QApplication::exit();
+}
+
+void MainWindow::on_actionNew_triggered()
+{
+    Reset();
 }
 
 void MainWindow::on_actionAbout_triggered()

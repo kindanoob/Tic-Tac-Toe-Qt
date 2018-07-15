@@ -1,5 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+
+#include "board.h"
 #include <QMainWindow>
 
 constexpr int kWindowWidthInPx = 640;
@@ -9,12 +11,6 @@ const QString kWindowTitle = QString("Tic-Tac-Toe");
 enum class SideToMove {
     X,
     O
-};
-
-enum class Piece {
-    X,
-    O,
-    NoPiece
 };
 
 enum class GameStatus {
@@ -40,8 +36,7 @@ public:
 private:
     Ui::MainWindow *ui;
     QVector<QRect> rects;
-    //int square_to_fill;
-    QVector<QVector<Piece>> board;
+    Board board;
     SideToMove side_to_move;
     bool is_finished;
     GameStatus game_status;
