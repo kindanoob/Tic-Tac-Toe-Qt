@@ -47,6 +47,8 @@ public:
     Board& GetBoard();
     const Board& GetBoard() const;
     const Piece GetPieceToMove() const;
+
+    QString GetGameOutcomeText() const;
 protected:
     //
 private:

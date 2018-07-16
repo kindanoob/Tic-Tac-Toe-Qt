@@ -8,6 +8,13 @@ constexpr int kNumRows = 3;
 constexpr int kNumCols = 3;
 constexpr int kNumSquares = kNumRows * kNumCols;
 
+struct Move {
+    Move() : row(-1), col(-1) {}
+    Move(int row_, int col_) : row(row_), col(col_) {}
+    int row;
+    int col;
+};
+
 enum class Piece {
     X,
     O,
@@ -17,17 +24,21 @@ enum class Piece {
 class Board {
 public:
     Board();
-    clear();
+//    clear();
     void Reset();
-    void PrintToConsole();
-    bool CheckRowWin(int row, const Piece& piece);
-    bool CheckColWin(int row, const Piece& piece);
-    bool CheckMainDiagWin(const Piece& piece);
-    bool CheckAntiDiagWin(const Piece& piece);
-    bool CheckDraw();
+    void PrintToConsole() const;
+    bool CheckWin(const Piece& piece) const;
+    bool CheckRowWin(int row, const Piece& piece) const;
+    bool CheckColWin(int row, const Piece& piece) const;
+    bool CheckMainDiagWin(const Piece& piece) const;
+    bool CheckAntiDiagWin(const Piece& piece) const;
+    bool CheckDraw() const;
     Piece& At(int row, int col);
-    QVector<QPair<int, int>> GenValidMoves() const;
+    QVector<Move> GenValidMoves() const;
     int EvalBoard() const;
+    bool IsTerminalNode() const;
+    void MakeMove(const Move& move, Piece piece);
+    void UnmakeMove(const Move& move);
 private:
     QVector<QVector<Piece>> board;
 };

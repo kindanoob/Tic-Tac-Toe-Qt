@@ -19,7 +19,7 @@ void Board::Reset() {
     }
 }
 
-void Board::PrintToConsole() {
+void Board::PrintToConsole() const {
     for (int row = 0; row < kNumRows; ++row) {
         QString curr_row;
         for (int col = 0; col < kNumCols; ++col) {
@@ -40,7 +40,17 @@ Piece& Board::At(int row, int col) {
     return board[row][col];
 }
 
-bool Board::CheckRowWin(int row, const Piece& piece) {
+bool Board::CheckWin(const Piece& piece) const {
+    assert(piece != Piece::NoPiece);
+    for (int i = 0; i < kNumRows; ++i) {
+        if (CheckRowWin(i, piece) || CheckColWin(i, piece)) {
+            return true;
+        }
+    }
+    return CheckMainDiagWin(piece) || CheckAntiDiagWin(piece);
+}
+
+bool Board::CheckRowWin(int row, const Piece& piece) const {
     if (board[row][0] != piece) {
         return false;
     }
@@ -52,7 +62,7 @@ bool Board::CheckRowWin(int row, const Piece& piece) {
     return true;
 }
 
-bool Board::CheckColWin(int col, const Piece& piece) {
+bool Board::CheckColWin(int col, const Piece& piece) const {
     if (board[0][col] != piece) {
         return false;
     }
@@ -64,7 +74,7 @@ bool Board::CheckColWin(int col, const Piece& piece) {
     return true;
 }
 
-bool Board::CheckMainDiagWin(const Piece& piece) {
+bool Board::CheckMainDiagWin(const Piece& piece) const {
     for (int row = 0; row < kNumRows; ++row) {
         if (board[row][row] != piece) {
             return false;
@@ -73,7 +83,7 @@ bool Board::CheckMainDiagWin(const Piece& piece) {
     return true;
 }
 
-bool Board::CheckAntiDiagWin(const Piece& piece) {
+bool Board::CheckAntiDiagWin(const Piece& piece) const {
     for (int row = 0; row < kNumRows; ++row) {
         if (board[row][kNumRows - row - 1] != piece) {
             return false;
@@ -82,7 +92,7 @@ bool Board::CheckAntiDiagWin(const Piece& piece) {
     return true;
 }
 
-bool Board::CheckDraw() {
+bool Board::CheckDraw() const {
     int piece_cnt = 0;
     for (int row = 0; row < kNumRows; ++row) {
         for (int col = 0; col < kNumCols; ++col) {
@@ -94,12 +104,13 @@ bool Board::CheckDraw() {
     return piece_cnt == kNumSquares;
 }
 
-QVector<QPair<int, int>> Board::GenValidMoves() const {
-    QVector<QPair<int, int>> valid_moves;
+QVector<Move> Board::GenValidMoves() const {
+    QVector<Move> valid_moves;
     for (int row = 0; row < kNumRows; ++row) {
         for (int col = 0; col < kNumCols; ++col) {
             if (board[row][col] != Piece::NoPiece) {
-                valid_moves.append(QPair<int, int>(row, col));
+                //auto m = ;
+                valid_moves.append(Move(row, col));
             }
         }
     }
@@ -107,5 +118,17 @@ QVector<QPair<int, int>> Board::GenValidMoves() const {
 }
 
 int Board::EvalBoard() const {
-    //
+    return 0;
+}
+
+bool Board::IsTerminalNode() const {
+    return CheckWin(Piece::X) || CheckWin(Piece::O) || CheckDraw();
+}
+
+void Board::MakeMove(const Move& move, Piece piece) {
+    board[move.row][move.col] = piece;
+}
+
+void Board::UnmakeMove(const Move& move) {
+    board[move.row][move.col] = Piece::NoPiece;
 }

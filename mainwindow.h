@@ -55,7 +55,6 @@ protected:
     void PrintBoardToConsole();
     int GetSquareSizeInPx();
 
-    QString GetGameOutcomeText();
 private slots:
     void on_actionExit_triggered();
     void on_actionNew_triggered();

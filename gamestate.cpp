@@ -101,3 +101,16 @@ const Board& GameState::GetBoard() const {
 const Piece GameState::GetPieceToMove() const {
     return GetSideToMove() == SideToMove::X ? Piece::X : Piece::O;
 }
+
+QString GameState::GetGameOutcomeText() const {
+    assert(GetIsFinished());
+    QString outcome("Game is finished.\n");
+    if (GetGameStatus() == GameStatus::XWon) {
+        outcome += "X Won.";
+    } else if (GetGameStatus() == GameStatus::OWon) {
+        outcome += "O Won.";
+    } else {
+        outcome += "Draw.";
+    }
+    return outcome;
+}

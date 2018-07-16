@@ -132,7 +132,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
                 GetGameState().UpdateGameStatus();
                 if (GetGameState().IsGameFinished()) {
                     QMessageBox msgBox;
-                    msgBox.setText(GetGameOutcomeText());
+                    msgBox.setText(GetGameState().GetGameOutcomeText());
                     msgBox.exec();
                     GetGameState().Reset();
                     return;
@@ -162,19 +162,6 @@ void MainWindow::CreateRects() {
             rects.append(rect);
         }
     }
-}
-
-QString MainWindow::GetGameOutcomeText() {
-    assert(GetGameState().GetIsFinished());
-    QString outcome("Game is finished.\n");
-    if (GetGameState().GetGameStatus() == GameStatus::XWon) {
-        outcome += "X Won.";
-    } else if (GetGameState().GetGameStatus() == GameStatus::OWon) {
-        outcome += "O Won.";
-    } else {
-        outcome += "Draw.";
-    }
-    return outcome;
 }
 
 void MainWindow::on_actionExit_triggered() {
