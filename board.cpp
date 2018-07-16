@@ -36,6 +36,7 @@ void Board::PrintToConsole() {
 }
 
 Piece& Board::At(int row, int col) {
+    assert(row >= 0 && row < kNumRows && col >= 0 && col < kNumCols);
     return board[row][col];
 }
 
@@ -91,4 +92,20 @@ bool Board::CheckDraw() {
         }
     }
     return piece_cnt == kNumSquares;
+}
+
+QVector<QPair<int, int>> Board::GenValidMoves() const {
+    QVector<QPair<int, int>> valid_moves;
+    for (int row = 0; row < kNumRows; ++row) {
+        for (int col = 0; col < kNumCols; ++col) {
+            if (board[row][col] != Piece::NoPiece) {
+                valid_moves.append(QPair<int, int>(row, col));
+            }
+        }
+    }
+    return valid_moves;
+}
+
+int Board::EvalBoard() const {
+    //
 }

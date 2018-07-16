@@ -2,6 +2,7 @@
 #define BOARD_H
 
 #include <QVector>
+#include <QPair>
 
 constexpr int kNumRows = 3;
 constexpr int kNumCols = 3;
@@ -25,6 +26,8 @@ public:
     bool CheckAntiDiagWin(const Piece& piece);
     bool CheckDraw();
     Piece& At(int row, int col);
+    QVector<QPair<int, int>> GenValidMoves() const;
+    int EvalBoard() const;
 private:
     QVector<QVector<Piece>> board;
 };

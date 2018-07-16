@@ -21,13 +21,13 @@ constexpr int kCircleRadius = kSquareSizeInPx / 2 - 3 * kPenWidthInPx / 4;
 // kCircleCoeff is used to adjust the circle radius depending on the square size and pen's width
 constexpr double kCircleCoeff = 5.0 / 5;
 
+constexpr int kMenuIconWidthInPx = 30;
+constexpr int kMenuIconHeightInPx = 30;
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    side_to_move(SideToMove::X),
-    is_finished(false),
-    game_status(GameStatus::InProgress),
     is_fullscreen(false),
     window_width(kWindowWidthInPx),
     window_height(kWindowHeightInPx),
@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     setMouseTracking(true);
     CreateRects();
-    ui->mainToolBar->setIconSize(QSize(20, 20));
+    ui->mainToolBar->setIconSize(QSize(kMenuIconWidthInPx, kMenuIconHeightInPx));
 }
 
 MainWindow::~MainWindow() {
@@ -93,9 +93,9 @@ void MainWindow::paintEvent(QPaintEvent *event) {
         int oy = offset_y;
         int sqsz = square_size_in_px;
         int r = circle_radius;
-        if (board.At(row, col) == Piece::NoPiece) {
+        if (GetGameState().GetBoard().At(row, col) == Piece::NoPiece) {
             continue;
-        } else if (board.At(row, col) == Piece::X) {
+        } else if (GetGameState().GetBoard().At(row, col) == Piece::X) {
             pen.setColor(Qt::red);
             pen.setCapStyle(Qt::RoundCap);
             painter.setPen(pen);
@@ -107,7 +107,7 @@ void MainWindow::paintEvent(QPaintEvent *event) {
                              oy + row * sqsz + pen_width,
                              ox + col * sqsz + pen_width,
                              oy + row * sqsz + sqsz - pen_width);
-        } else if (board.At(row, col) == Piece::O) {
+        } else if (GetGameState().GetBoard().At(row, col) == Piece::O) {
             pen.setColor(Qt::green);
             painter.setPen(pen);
             painter.drawEllipse(QPoint(ox + col * sqsz + sqsz / 2, oy + row * sqsz + sqsz / 2),
@@ -127,17 +127,17 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         for (int i = 0; i < rects.size(); ++i) {
             int row = i / kNumRows;
             int col = i % kNumCols;
-            if (rects[i].contains(QPoint(x, y)) && board.At(row, col) == Piece::NoPiece) {
-                board.At(row, col) = (side_to_move == SideToMove::X) ? Piece::X : Piece::O;
-                UpdateGameStatus();
-                if (IsGameFinished()) {
+            if (rects[i].contains(QPoint(x, y)) && GetGameState().GetBoard().At(row, col) == Piece::NoPiece) {
+                GetGameState().GetBoard().At(row, col) = GetGameState().GetPieceToMove();
+                GetGameState().UpdateGameStatus();
+                if (GetGameState().IsGameFinished()) {
                     QMessageBox msgBox;
                     msgBox.setText(GetGameOutcomeText());
                     msgBox.exec();
-                    Reset();
+                    GetGameState().Reset();
                     return;
                 }
-                SwitchSideToMove();
+                GetGameState().SwitchSideToMove();
                 break;
             }
         }
@@ -154,8 +154,8 @@ void MainWindow::PrintRectInfo() {
 }
 
 void MainWindow::CreateRects() {
-    for (int row = 0; row < 3; ++row) {
-        for (int col = 0; col < 3; ++col){
+    for (int row = 0; row < kNumRows; ++row) {
+        for (int col = 0; col < kNumCols; ++col){
             QRect rect(offset_x + col * square_size_in_px,
                        offset_y + row * square_size_in_px,
                        square_size_in_px, square_size_in_px);
@@ -164,59 +164,12 @@ void MainWindow::CreateRects() {
     }
 }
 
-void MainWindow::SetSideToMove(const SideToMove& side) {
-    side_to_move = side;
-}
-
-SideToMove MainWindow::GetSideToMove() {
-    return side_to_move;
-}
-
-void MainWindow::SwitchSideToMove() {
-    if (side_to_move == SideToMove::X) {
-        SetSideToMove(SideToMove::O);
-    } else {
-        SetSideToMove(SideToMove::X);
-    }
-}
-
-bool MainWindow::IsGameFinished() {
-    return game_status != GameStatus::InProgress;
-}
-
-void MainWindow::UpdateGameStatus() {
-    if (CheckWin(SideToMove::X)) {
-        game_status = GameStatus::XWon;
-        is_finished = true;
-    } else if (CheckWin(SideToMove::O)) {
-        game_status = GameStatus::OWon;
-        is_finished = true;
-    } else if (CheckDraw()) {
-        game_status = GameStatus::Draw;
-        is_finished = true;
-    }
-}
-
-bool MainWindow::CheckWin(const SideToMove& side) {
-    Piece piece = side == SideToMove::X ? Piece::X : Piece::O;
-    for (int i = 0; i < kNumRows; ++i) {
-        if (board.CheckRowWin(i, piece) || board.CheckColWin(i, piece)) {
-            return true;
-        }
-    }
-    return board.CheckMainDiagWin(piece) || board.CheckAntiDiagWin(piece);
-}
-
-bool MainWindow::CheckDraw() {
-    return board.CheckDraw();
-}
-
 QString MainWindow::GetGameOutcomeText() {
-    assert(is_finished);
+    assert(GetGameState().GetIsFinished());
     QString outcome("Game is finished.\n");
-    if (game_status == GameStatus::XWon) {
+    if (GetGameState().GetGameStatus() == GameStatus::XWon) {
         outcome += "X Won.";
-    } else if (game_status == GameStatus::OWon) {
+    } else if (GetGameState().GetGameStatus() == GameStatus::OWon) {
         outcome += "O Won.";
     } else {
         outcome += "Draw.";
@@ -224,54 +177,16 @@ QString MainWindow::GetGameOutcomeText() {
     return outcome;
 }
 
-void MainWindow::Reset() {
-    board.Reset();
-    ResetSideToMove();
-    ResetGameStatus();
-    ResetIsFinished();
-    update();
-}
-
-void MainWindow::ResetSideToMove() {
-    SetSideToMove(SideToMove::X);
-}
-
-void MainWindow::ResetGameStatus() {
-    SetGameStatus(GameStatus::InProgress);
-}
-
-void MainWindow::ResetIsFinished() {
-    SetIsFinished(false);
-}
-
-void MainWindow::SetIsFinished(bool b) {
-    is_finished = b;
-}
-
-bool MainWindow::GetIsFinished() {
-    return is_finished;
-}
-
-void MainWindow::SetGameStatus(const GameStatus &status) {
-    game_status = status;
-}
-
-GameStatus MainWindow::GetGameStatus() {
-    return game_status;
-}
-
-void MainWindow::on_actionExit_triggered()
-{
+void MainWindow::on_actionExit_triggered() {
     QApplication::exit();
 }
 
-void MainWindow::on_actionNew_triggered()
-{
-    Reset();
+void MainWindow::on_actionNew_triggered() {
+    GetGameState().Reset();
+    update();
 }
 
-void MainWindow::on_actionAbout_triggered()
-{
+void MainWindow::on_actionAbout_triggered() {
     QMessageBox msgBox;
     msgBox.setWindowTitle("About Tic-Tac-Toe");
     msgBox.setText("Tic-Tac-Toe game\nAuthor: Evgeny Pavlov aka kindanoob\n"
@@ -279,8 +194,15 @@ void MainWindow::on_actionAbout_triggered()
     msgBox.exec();
 }
 
-void MainWindow::on_actionToggle_Fullscreen_triggered()
-{
+void MainWindow::on_actionToggle_Fullscreen_triggered() {
     is_fullscreen ? showNormal() : showFullScreen();
     is_fullscreen = !is_fullscreen;
+}
+
+GameState& MainWindow::GetGameState() {
+    return game_state;
+}
+
+const GameState& MainWindow::GetGameState() const {
+    return game_state;
 }
