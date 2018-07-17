@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "ai.h"
 #include <QDebug>
 #include <QPaintEvent>
 #include <QPainter>
@@ -127,9 +128,9 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         for (int i = 0; i < rects.size(); ++i) {
             int row = i / kNumRows;
             int col = i % kNumCols;
+            Move player_move(row, col);
             if (rects[i].contains(QPoint(x, y)) && GetGameState().GetBoard().At(row, col) == Piece::NoPiece) {
-                GetGameState().GetBoard().At(row, col) = GetGameState().GetPieceToMove();
-                GetGameState().UpdateGameStatus();
+                GetGameState().MakeMove(player_move);
                 if (GetGameState().IsGameFinished()) {
                     QMessageBox msgBox;
                     msgBox.setText(GetGameState().GetGameOutcomeText());
@@ -137,7 +138,17 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
                     GetGameState().Reset();
                     return;
                 }
-                GetGameState().SwitchSideToMove();
+                assert(GetGameState().GetPlayerToMove() == Player::Computer);
+                Move computer_move = ai::GetRandomeMove(GetGameState().GetBoard(),
+                                                        GetGameState().GetSideToMove());
+                GetGameState().MakeMove(computer_move);
+                if (GetGameState().IsGameFinished()) {
+                    QMessageBox msgBox;
+                    msgBox.setText(GetGameState().GetGameOutcomeText());
+                    msgBox.exec();
+                    GetGameState().Reset();
+                    return;
+                }
                 break;
             }
         }

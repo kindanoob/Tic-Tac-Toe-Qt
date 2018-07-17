@@ -1,5 +1,6 @@
 #include "ai.h"
 #include <cassert>
+#include <QDebug>
 
 constexpr int kInfinity = 1e6;
 

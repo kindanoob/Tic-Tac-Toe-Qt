@@ -1,9 +1,13 @@
 #include "gamestate.h"
+#include <QDebug>
 
 GameState::GameState() :
     side_to_move(SideToMove::X),
     is_finished(false),
-    game_status(GameStatus::InProgress)
+    game_status(GameStatus::InProgress),
+    PlayerX(Player::Human),
+    PlayerO(Player::Computer),
+    player_to_move(Player::Human)
 {
 
 }
@@ -58,12 +62,17 @@ bool GameState::CheckDraw() {
 void GameState::Reset() {
     board.Reset();
     ResetSideToMove();
+    ResetPlayerToMove();
     ResetGameStatus();
     ResetIsFinished();
 }
 
 void GameState::ResetSideToMove() {
     SetSideToMove(SideToMove::X);
+}
+
+void GameState::ResetPlayerToMove() {
+    SetPlayerToMove(Player::Human);
 }
 
 void GameState::ResetGameStatus() {
@@ -113,4 +122,23 @@ QString GameState::GetGameOutcomeText() const {
         outcome += "Draw.";
     }
     return outcome;
+}
+
+Player GameState::GetPlayerToMove() const {
+    return player_to_move;
+}
+
+void GameState::SetPlayerToMove(Player player) {
+    player_to_move = player;
+}
+
+void GameState::SwitchPlayerToMove() {
+    SetPlayerToMove(GetPlayerToMove() == Player::Computer ? Player::Human : Player::Computer);
+}
+
+void GameState::MakeMove(const Move& move) {
+    GetBoard().At(move.row, move.col) = GetPieceToMove();
+    SwitchSideToMove();
+    SwitchPlayerToMove();
+    UpdateGameStatus();
 }

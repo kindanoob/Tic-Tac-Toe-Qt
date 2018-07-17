@@ -108,8 +108,7 @@ QVector<Move> Board::GenValidMoves() const {
     QVector<Move> valid_moves;
     for (int row = 0; row < kNumRows; ++row) {
         for (int col = 0; col < kNumCols; ++col) {
-            if (board[row][col] != Piece::NoPiece) {
-                //auto m = ;
+            if (board[row][col] == Piece::NoPiece) {
                 valid_moves.append(Move(row, col));
             }
         }
