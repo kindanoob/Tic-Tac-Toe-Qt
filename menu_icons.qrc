@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/images/menu_icons">
+    <qresource prefix="/">
         <file>images/menu_icons/about.jpg</file>
         <file>images/menu_icons/fullscreen.jpg</file>
         <file>images/menu_icons/help.jpg</file>

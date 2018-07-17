@@ -5,9 +5,10 @@ GameState::GameState() :
     side_to_move(SideToMove::X),
     is_finished(false),
     game_status(GameStatus::InProgress),
-    PlayerX(Player::Human),
-    PlayerO(Player::Computer),
-    player_to_move(Player::Human)
+    player_x(Player::Human),
+    player_o(Player::Computer),
+    player_to_move(Player::Human),
+    computer_mode(ComputerMode::kPlaysO)
 {
 
 }
@@ -72,7 +73,7 @@ void GameState::ResetSideToMove() {
 }
 
 void GameState::ResetPlayerToMove() {
-    SetPlayerToMove(Player::Human);
+    SetPlayerToMove(GetPlayerX());
 }
 
 void GameState::ResetGameStatus() {
@@ -139,6 +140,29 @@ void GameState::SwitchPlayerToMove() {
 void GameState::MakeMove(const Move& move) {
     GetBoard().At(move.row, move.col) = GetPieceToMove();
     SwitchSideToMove();
-    SwitchPlayerToMove();
     UpdateGameStatus();
+}
+
+Player GameState::GetPlayerX() const {
+    return player_x;
+}
+
+void GameState::SetPlayerX(Player player) {
+    player_x = player;
+}
+
+Player GameState::GetPlayerO() const {
+    return player_o;
+}
+
+void GameState::SetPlayerO(Player player) {
+    player_o = player;
+}
+
+ComputerMode GameState::GetComputerMode() const {
+    return computer_mode;
+}
+
+void GameState::SetComputerMode(ComputerMode mode) {
+    computer_mode = mode;
 }

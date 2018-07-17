@@ -22,6 +22,13 @@ enum class Player {
     Computer
 };
 
+enum class ComputerMode {
+    kObserves,
+    kPlaysX,
+    kPlaysO,
+    kPlaysBoth,
+};
+
 class GameState
 {
 public:
@@ -47,7 +54,7 @@ public:
     void SwitchSideToMove();
     const bool GetIsFinished() const;
     void SetIsFinished(bool b);
-        const GameStatus GetGameStatus() const;
+    const GameStatus GetGameStatus() const;
     void SetGameStatus(const GameStatus& status);
     void UpdateGameStatus();
     Board& GetBoard();
@@ -56,6 +63,12 @@ public:
     Player GetPlayerToMove() const;
     void SetPlayerToMove(Player player);
     void SwitchPlayerToMove();
+    Player GetPlayerX() const;
+    void SetPlayerX(Player player);
+    Player GetPlayerO() const;
+    void SetPlayerO(Player player);
+    ComputerMode GetComputerMode() const;
+    void SetComputerMode(ComputerMode mode);
 
     void MakeMove(const Move& move);
 
@@ -67,9 +80,10 @@ private:
     SideToMove side_to_move;
     bool is_finished;
     GameStatus game_status;
-    Player PlayerX;
-    Player PlayerO;
+    Player player_x;
+    Player player_o;
     Player player_to_move;
+    ComputerMode computer_mode;
 };
 
 #endif // GAMESTATE_H

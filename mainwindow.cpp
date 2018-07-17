@@ -7,6 +7,8 @@
 #include <QPen>
 #include <QMessageBox>
 #include <QApplication>
+#include <QPixmap>
+#include <QIcon>
 
 constexpr int kSquareSizeScaleFactor = 6;
 constexpr int kSquareSizeInPx = kWindowWidthInPx / kSquareSizeScaleFactor;
@@ -44,10 +46,88 @@ MainWindow::MainWindow(QWidget *parent) :
     setMouseTracking(true);
     CreateRects();
     ui->mainToolBar->setIconSize(QSize(kMenuIconWidthInPx, kMenuIconHeightInPx));
+    setMinimumSize(kWindowMinWidthInPx, kWindowMinHeightInPx);
+    resize(kWindowWidthInPx, kWindowHeightInPx);
+    setWindowTitle(kWindowTitle);
+    CreateActions();
+    CreateMenus();
 }
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+void MainWindow::CreateActions() {
+    new_game_action = new QAction(tr("&New Game"), this);
+    new_game_action->setShortcut(tr("Ctrl+N"));
+    new_game_action->setStatusTip(tr("Start new game"));
+    new_game_action->setIcon(QIcon(":/images/menu_icons/play.jpg"));
+    connect(new_game_action, SIGNAL(triggered()), this, SLOT(on_new_game_action_triggered()));
+    //connect(this, &Menu::, this, &MainWindow::on_new_game_act_triggered);
+    //computer_mode_alignment_group = new QActionGroup(this);
+    //computer_mode_alignment_group->addAction
+
+    exit_action = new QAction(tr("&Exit"), this);
+    exit_action->setShortcut(tr("Ctrl+Q"));
+    exit_action->setStatusTip(tr("Exit"));
+    exit_action->setIcon(QIcon(":/images/menu_icons/exit.jpg"));
+    exit_action->setToolTip("LOOOOOOOOOOL");
+    connect(exit_action, SIGNAL(triggered()), this, SLOT(on_exit_action_triggered()));
+
+    toggle_fullscreen_action = new QAction(tr("&Toggle fullscreen"), this);
+    toggle_fullscreen_action->setShortcut(tr("Ctrl+F"));
+    toggle_fullscreen_action->setStatusTip(tr("Toggle fullscreen"));
+    toggle_fullscreen_action->setIcon(QIcon(":/images/menu_icons/fullscreen.jpg"));
+    connect(toggle_fullscreen_action, SIGNAL(triggered()), this, SLOT(on_toggle_fullscreen_action_triggered()));
+
+    about_action = new QAction(tr("&About"), this);
+    about_action->setShortcut(tr("&Ctrl+A"));
+    about_action->setStatusTip(tr("About"));
+    about_action->setIcon(QIcon(":/images/menu_icons/about.jpg"));
+    connect(about_action, SIGNAL(triggered()), this, SLOT(on_about_action_triggered()));
+
+    computer_plays_x_action = new QAction(tr("&Computer plays X"), this);
+    connect(computer_plays_x_action, SIGNAL(triggered()), this, SLOT(on_computer_plays_x_action_triggered()));
+
+    computer_plays_o_action = new QAction(tr("&Computer plays O"), this);
+    connect(computer_plays_o_action, SIGNAL(triggered()), this, SLOT(on_computer_plays_o_action_triggered()));
+
+    computer_observes_action = new QAction(tr("&Computer observes"), this);
+    connect(computer_observes_action, SIGNAL(triggered()), this, SLOT(on_computer_observes_action_triggered()));
+
+    computer_mode_action_group = new QActionGroup(this);
+    computer_mode_action_group->addAction(computer_plays_x_action);
+    computer_mode_action_group->addAction(computer_plays_o_action);
+    computer_mode_action_group->addAction(computer_observes_action);
+    computer_plays_x_action->setCheckable(true);
+    computer_plays_o_action->setCheckable(true);
+    computer_observes_action->setCheckable(true);
+    computer_plays_o_action->setChecked(true);
+
+    help_action = new QAction(tr("&Help"), this);
+    help_action->setShortcut(tr("Ctrl+H"));
+    help_action->setStatusTip(tr("Help"));
+    help_action->setIcon(QIcon(":/images/menu_icons/help.jpg"));
+    connect(help_action, SIGNAL(triggered()), this, SLOT(on_help_action_triggered()));
+}
+
+void MainWindow::CreateMenus() {
+    game_menu = menuBar()->addMenu(tr("&Game"));
+    game_menu->addAction(new_game_action);
+    game_menu->addSeparator();
+    game_menu->addAction(exit_action);
+
+    settings_menu = menuBar()->addMenu(tr("&Settings"));
+    settings_menu->addAction(computer_plays_x_action);
+    settings_menu->addAction(computer_plays_o_action);
+    settings_menu->addAction(computer_observes_action);
+
+    window_menu = menuBar()->addMenu(tr("Window"));
+    window_menu->addAction(toggle_fullscreen_action);
+
+    help_menu = menuBar()->addMenu(tr("&Help"));
+    help_menu->addAction(about_action);
+    help_menu->addAction(help_action);
 }
 
 void MainWindow::UpdateBoardRectParameters() {
@@ -122,6 +202,9 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
+    if (GetGameState().GetPlayerToMove() == Player::Computer) {
+        return;
+    }
     if (event->button() == Qt::LeftButton) {
         int x = event->pos().x();
         int y = event->pos().y();
@@ -136,18 +219,14 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
                     msgBox.setText(GetGameState().GetGameOutcomeText());
                     msgBox.exec();
                     GetGameState().Reset();
+                    if (GetGameState().GetComputerMode() == ComputerMode::kPlaysX) {
+                        MakeComputerMove();
+                    }
                     return;
                 }
-                assert(GetGameState().GetPlayerToMove() == Player::Computer);
-                Move computer_move = ai::GetRandomeMove(GetGameState().GetBoard(),
-                                                        GetGameState().GetSideToMove());
-                GetGameState().MakeMove(computer_move);
-                if (GetGameState().IsGameFinished()) {
-                    QMessageBox msgBox;
-                    msgBox.setText(GetGameState().GetGameOutcomeText());
-                    msgBox.exec();
-                    GetGameState().Reset();
-                    return;
+                if (GetGameState().GetComputerMode() != ComputerMode::kObserves) {
+                    GetGameState().SwitchPlayerToMove();
+                    MakeComputerMove();
                 }
                 break;
             }
@@ -175,16 +254,19 @@ void MainWindow::CreateRects() {
     }
 }
 
-void MainWindow::on_actionExit_triggered() {
+void MainWindow::on_exit_action_triggered() {
     QApplication::exit();
 }
 
-void MainWindow::on_actionNew_triggered() {
+void MainWindow::on_new_game_action_triggered() {
     GetGameState().Reset();
     update();
+    if (GetGameState().GetPlayerToMove() == Player::Computer) {
+        MakeComputerMove();
+    }
 }
 
-void MainWindow::on_actionAbout_triggered() {
+void MainWindow::on_about_action_triggered() {
     QMessageBox msgBox;
     msgBox.setWindowTitle("About Tic-Tac-Toe");
     msgBox.setText("Tic-Tac-Toe game\nAuthor: Evgeny Pavlov aka kindanoob\n"
@@ -192,9 +274,39 @@ void MainWindow::on_actionAbout_triggered() {
     msgBox.exec();
 }
 
-void MainWindow::on_actionToggle_Fullscreen_triggered() {
+void MainWindow::on_toggle_fullscreen_action_triggered() {
     is_fullscreen ? showNormal() : showFullScreen();
     is_fullscreen = !is_fullscreen;
+}
+
+void MainWindow::on_help_action_triggered() {
+    //
+}
+
+void MainWindow::on_computer_plays_x_action_triggered() {
+    GetGameState().SetComputerMode(ComputerMode::kPlaysX);
+    GetGameState().SetPlayerX(Player::Computer);
+    if (GetGameState().GetSideToMove() == SideToMove::X) {
+        GetGameState().SetPlayerToMove(Player::Computer);
+        qDebug() << "Set player to move to computer";
+        MakeComputerMove();
+    }
+}
+
+void MainWindow::on_computer_plays_o_action_triggered() {
+    GetGameState().SetComputerMode(ComputerMode::kPlaysO);
+    GetGameState().SetPlayerO(Player::Computer);
+    if (GetGameState().GetSideToMove() == SideToMove::O) {
+        GetGameState().SetPlayerToMove(Player::Computer);
+        MakeComputerMove();
+    }
+}
+
+void MainWindow::on_computer_observes_action_triggered() {
+    GetGameState().SetComputerMode(ComputerMode::kObserves);
+    GetGameState().SetPlayerX(Player::Human);
+    GetGameState().SetPlayerO(Player::Human);
+    GetGameState().SetPlayerToMove(Player::Human);
 }
 
 GameState& MainWindow::GetGameState() {
@@ -203,4 +315,25 @@ GameState& MainWindow::GetGameState() {
 
 const GameState& MainWindow::GetGameState() const {
     return game_state;
+}
+
+void MainWindow::MakeComputerMove() {
+    //assert(false);
+    assert(GetGameState().GetPlayerToMove() == Player::Computer);
+    Move computer_move = ai::GetRandomeMove(GetGameState().GetBoard(),
+                                            GetGameState().GetSideToMove());
+    GetGameState().MakeMove(computer_move);
+    if (GetGameState().IsGameFinished()) {
+        QMessageBox msgBox;
+        msgBox.setText(GetGameState().GetGameOutcomeText());
+        msgBox.exec();
+        GetGameState().Reset();
+        if (GetGameState().GetComputerMode() == ComputerMode::kPlaysX ||
+                GetGameState().GetComputerMode() == ComputerMode::kPlaysBoth) {
+            MakeComputerMove();
+        }
+    } else {
+        GetGameState().SwitchPlayerToMove();
+    }
+    update();
 }
