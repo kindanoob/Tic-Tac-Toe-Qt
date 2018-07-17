@@ -1,6 +1,9 @@
 #include "ai.h"
 #include <cassert>
 #include <QDebug>
+#include <algorithm>
+#include <chrono>
+#include <numeric>
 
 constexpr int kInfinity = 1e6;
 
@@ -19,6 +22,8 @@ Move GetMinimaxMove(SideToMove side, Board& board, int depth) {
     Piece piece = (side == SideToMove::X) ? Piece::X : Piece::O;
     Piece opposite_piece = (piece == Piece::X) ? Piece::O : Piece::X;
     QVector<Move> valid_moves = board.GenValidMoves();
+    std::default_random_engine dre(time(nullptr));
+    std::shuffle(valid_moves.begin(), valid_moves.end(), dre);
     assert(!valid_moves.empty());
     for (const Move& curr_move : valid_moves) {
         board.MakeMove(curr_move, piece);
