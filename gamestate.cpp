@@ -8,7 +8,8 @@ GameState::GameState() :
     player_x(Player::Human),
     player_o(Player::Computer),
     player_to_move(Player::Human),
-    computer_mode(ComputerMode::kPlaysO)
+    computer_mode(ComputerMode::kPlaysO),
+    ai_algorithm(AiAlgorithm::kRandom)
 {
 
 }
@@ -165,4 +166,12 @@ ComputerMode GameState::GetComputerMode() const {
 
 void GameState::SetComputerMode(ComputerMode mode) {
     computer_mode = mode;
+}
+
+AiAlgorithm GameState::GetAiAlgorithm() const {
+    return ai_algorithm;
+}
+
+void GameState::SetAiAlgorithm(AiAlgorithm algorithm) {
+    ai_algorithm = algorithm;
 }

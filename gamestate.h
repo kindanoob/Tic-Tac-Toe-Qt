@@ -29,6 +29,11 @@ enum class ComputerMode {
     kPlaysBoth,
 };
 
+enum class AiAlgorithm {
+    kRandom,
+    kMinimax
+};
+
 class GameState
 {
 public:
@@ -69,6 +74,8 @@ public:
     void SetPlayerO(Player player);
     ComputerMode GetComputerMode() const;
     void SetComputerMode(ComputerMode mode);
+    AiAlgorithm GetAiAlgorithm() const;
+    void SetAiAlgorithm(AiAlgorithm algorithm);
 
     void MakeMove(const Move& move);
 
@@ -84,6 +91,7 @@ private:
     Player player_o;
     Player player_to_move;
     ComputerMode computer_mode;
+    AiAlgorithm ai_algorithm;
 };
 
 #endif // GAMESTATE_H

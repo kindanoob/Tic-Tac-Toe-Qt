@@ -49,6 +49,8 @@ private:
     //Menus
     QMenu *game_menu;
     QMenu *settings_menu;
+    QMenu *computer_mode_menu;
+    QMenu *ai_algorithm_menu;
     QMenu *window_menu;
     QMenu *help_menu;
     //Actions
@@ -61,6 +63,9 @@ private:
     QAction *computer_plays_o_action;
     QAction *computer_observes_action;
     QActionGroup *computer_mode_action_group;
+    QAction *ai_random_action;
+    QAction *ai_minimax_action;
+    QActionGroup *ai_action_group;
 
 protected:
     void paintEvent(QPaintEvent *);
@@ -91,6 +96,8 @@ private slots:
     void on_computer_plays_x_action_triggered();
     void on_computer_plays_o_action_triggered();
     void on_computer_observes_action_triggered();
+    void on_ai_random_action_triggered();
+    void on_ai_minimax_action_triggered();
 };
 
 #endif // MAINWINDOW_H

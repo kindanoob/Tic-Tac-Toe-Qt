@@ -6,7 +6,9 @@
 #include <QPair>
 
 namespace ai {
-Move GetRandomeMove(const Board& board, SideToMove side);
+constexpr int kDefaultMinimaxDepth = 10;
+
+Move GetRandomeMove(SideToMove side, const Board& board);
 Move GetMinimaxMove(SideToMove side, Board& board, int depth);
 int Minimax(Piece piece, Board& board, int depth, bool is_maximizing);
 }

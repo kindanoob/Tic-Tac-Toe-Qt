@@ -1,6 +1,9 @@
 #include "board.h"
 #include <QDebug>
 
+constexpr int kWinEval = 100;
+constexpr int kDrawEval = 0;
+
 Board::Board()
 {
     for (int row = 0; row < kNumRows; ++row) {
@@ -116,7 +119,20 @@ QVector<Move> Board::GenValidMoves() const {
     return valid_moves;
 }
 
-int Board::EvalBoard() const {
+int Board::EvalBoard(Piece piece) const {
+    if (CheckWin(piece)) {
+        return kWinEval;
+    }
+    if (CheckDraw()) {
+        return kDrawEval;
+    }
+    // This piece of code should be reached only if we reached depth == 0 in
+    // the minimax call and the game is not finished. It can happen, for instance,
+    // when the kDefaultMinimaxDepth parameter is low. Since the tree of all
+    // possible positions in Tic-Tac-Toe is rather small, we just set the default
+    // minimax depth to 10, so that every time we call EvalBoard() the game is
+    // already finished.
+    assert(false);
     return 0;
 }
 

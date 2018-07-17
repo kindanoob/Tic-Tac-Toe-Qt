@@ -104,6 +104,20 @@ void MainWindow::CreateActions() {
     computer_observes_action->setCheckable(true);
     computer_plays_o_action->setChecked(true);
 
+    ai_random_action = new QAction(tr("&Random"), this);
+    ai_random_action->setCheckable(true);
+    connect(ai_random_action, SIGNAL(triggered()), this, SLOT(on_ai_random_action_triggered()));
+
+    ai_minimax_action = new QAction(tr("&Minimax"), this);
+    ai_minimax_action->setCheckable(true);
+    connect(ai_minimax_action, SIGNAL(triggered()), this, SLOT(on_ai_minimax_action_triggered()));
+
+    ai_action_group = new QActionGroup(this);
+    ai_action_group->addAction(ai_random_action);
+    ai_action_group->addAction(ai_minimax_action);
+    ai_random_action->setChecked(true);
+
+
     help_action = new QAction(tr("&Help"), this);
     help_action->setShortcut(tr("Ctrl+H"));
     help_action->setStatusTip(tr("Help"));
@@ -118,9 +132,18 @@ void MainWindow::CreateMenus() {
     game_menu->addAction(exit_action);
 
     settings_menu = menuBar()->addMenu(tr("&Settings"));
-    settings_menu->addAction(computer_plays_x_action);
-    settings_menu->addAction(computer_plays_o_action);
-    settings_menu->addAction(computer_observes_action);
+    //computer_mode_menu = menuBar()->settings_menu->addMenu(tr("&Computer mode"));
+    computer_mode_menu = new QMenu(tr("&Computer mode"));//, settings_menu);
+    computer_mode_menu->addAction(computer_plays_x_action);
+    computer_mode_menu->addAction(computer_plays_o_action);
+    computer_mode_menu->addAction(computer_observes_action);
+    settings_menu->addMenu(computer_mode_menu);
+    //ai_algorithm_menu = menuBar()->addMenu(tr("&Ai algorithm"));
+    ai_algorithm_menu = new QMenu(tr("&Ai algorithm"));
+    //settings_menu->addMenu(ai_algorithm_menu);
+    ai_algorithm_menu->addAction(ai_random_action);
+    ai_algorithm_menu->addAction(ai_minimax_action);
+    settings_menu->addMenu(ai_algorithm_menu);
 
     window_menu = menuBar()->addMenu(tr("Window"));
     window_menu->addAction(toggle_fullscreen_action);
@@ -309,6 +332,14 @@ void MainWindow::on_computer_observes_action_triggered() {
     GetGameState().SetPlayerToMove(Player::Human);
 }
 
+void MainWindow::on_ai_random_action_triggered() {
+    GetGameState().SetAiAlgorithm(AiAlgorithm::kRandom);
+}
+
+void MainWindow::on_ai_minimax_action_triggered() {
+    GetGameState().SetAiAlgorithm(AiAlgorithm::kMinimax);
+}
+
 GameState& MainWindow::GetGameState() {
     return game_state;
 }
@@ -318,10 +349,18 @@ const GameState& MainWindow::GetGameState() const {
 }
 
 void MainWindow::MakeComputerMove() {
-    //assert(false);
     assert(GetGameState().GetPlayerToMove() == Player::Computer);
-    Move computer_move = ai::GetRandomeMove(GetGameState().GetBoard(),
-                                            GetGameState().GetSideToMove());
+    Move computer_move;
+    if (GetGameState().GetAiAlgorithm() == AiAlgorithm::kRandom) {
+        computer_move = ai::GetRandomeMove(GetGameState().GetSideToMove(),
+                GetGameState().GetBoard());
+    } else if (GetGameState().GetAiAlgorithm() == AiAlgorithm::kMinimax) {
+        computer_move = ai::GetMinimaxMove(GetGameState().GetSideToMove(),
+                                                GetGameState().GetBoard(),
+                                                ai::kDefaultMinimaxDepth);
+    } else {
+        assert(false);
+    }
     GetGameState().MakeMove(computer_move);
     if (GetGameState().IsGameFinished()) {
         QMessageBox msgBox;

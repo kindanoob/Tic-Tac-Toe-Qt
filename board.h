@@ -35,7 +35,7 @@ public:
     bool CheckDraw() const;
     Piece& At(int row, int col);
     QVector<Move> GenValidMoves() const;
-    int EvalBoard() const;
+    int EvalBoard(Piece piece) const;
     bool IsTerminalNode() const;
     void MakeMove(const Move& move, Piece piece);
     void UnmakeMove(const Move& move);
